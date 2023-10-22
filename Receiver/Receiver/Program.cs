@@ -18,19 +18,29 @@ namespace Receiver
             using var channel = connection.CreateModel();
 
             channel.ExchangeDeclare(exchange: "direct_logs", type: ExchangeType.Direct);
-            // declare a server-named queue
             var queueName = channel.QueueDeclare().QueueName;
 
-            var targetSeverities = new List<string> { "erro", "info", "debug" };
 
-            foreach (var severity in targetSeverities)
+            Console.WriteLine("Please enter interested routings(Enter 'End' to finish)");
+            var routings = new HashSet<string>();
+            while (true)
+            {
+                var routing = Console.ReadLine();
+                if (routing == "End")
+                {
+                    break;
+                }
+                routings.Add(routing);
+            }
+
+            foreach (var routing in routings)
             {
                 channel.QueueBind(queue: queueName,
                                   exchange: "direct_logs",
-                                  routingKey: severity); // not only binds the queue with exchange but olso indicated the route that this queueis interested in 
+                                  routingKey: routing); 
             }
 
-            Console.WriteLine(" [*] Waiting for messages.");
+            Console.WriteLine("Waiting for messages...");
 
             var consumer = new EventingBasicConsumer(channel);
             consumer.Received += (model, ea) =>
@@ -38,13 +48,13 @@ namespace Receiver
                 var body = ea.Body.ToArray();
                 var message = Encoding.UTF8.GetString(body);
                 var routingKey = ea.RoutingKey;
-                Console.WriteLine($" [x] Received '{routingKey}':'{message}'");
+                Console.WriteLine($"Received '{routingKey}':'{message}'");
             };
             channel.BasicConsume(queue: queueName,
                                  autoAck: true,
                                  consumer: consumer);
 
-            Console.WriteLine(" Press [enter] to exit.");
+            Console.WriteLine("Press any key to exit");
             Console.ReadLine();
         }
     }
