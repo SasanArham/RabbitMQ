@@ -18,21 +18,25 @@ namespace sender
 
             channel.ExchangeDeclare(exchange: "direct_logs", type: ExchangeType.Direct);
 
-            var severities = new List<string> { "erro", "warning", "info", "debug" };
-            Random rnd = new Random();
+            string routing;
+            string message;
 
-            var severity = severities.ElementAt(rnd.Next(0, 3));
-            var message = "Hello";
-            var body = Encoding.UTF8.GetBytes(message);
+            do
+            {
+                Console.WriteLine("Please set the routing:");
+                routing = Console.ReadLine() ?? "Default";
 
-            channel.BasicPublish(exchange: "direct_logs",
-                                 routingKey: severity, // it means that thisexchange will push messages only to the queues that want message from this exchange with this routing
-                                 basicProperties: null,
-                                 body: body);
-            Console.WriteLine($" [x] Sent '{severity}':'{message}'");
+                Console.WriteLine("Enter your message (Enter 'End' to close the program):");
+                message = Console.ReadLine() ?? "Hello";
 
-            Console.WriteLine(" Press [enter] to exit.");
-            Console.ReadLine();
+                var body = Encoding.UTF8.GetBytes(message);
+                channel.BasicPublish(exchange: "direct_logs",
+                                     routingKey: routing,
+                                     basicProperties: null,
+                                     body: body);
+                Console.WriteLine($"Sent ''{message}' with ;{routing}' routing");
+                Console.WriteLine("----------------------------------------------------------");
+            } while (message != "End");
         }
     }
 }
