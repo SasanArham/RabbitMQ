@@ -57,7 +57,15 @@ namespace Receiver
                 var message = Encoding.UTF8.GetString(body);
                 var routingKey = ea.RoutingKey;
                 Console.WriteLine($"Received '{routingKey}':'{message}'");
-                channel.BasicAck(ea.DeliveryTag, false);
+                if (message == "Nack")
+                {
+                    channel.BasicNack(ea.DeliveryTag, false
+                        , false); // If I set this to true and there is no other handeling consumer it will cause infinte reququing loop
+                }
+                else
+                {
+                    channel.BasicAck(ea.DeliveryTag, false);
+                }
             };
             channel.BasicConsume(queue: queueName,
                                  autoAck: false,
