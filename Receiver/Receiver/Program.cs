@@ -18,7 +18,14 @@ namespace Receiver
             using var channel = connection.CreateModel();
 
             channel.ExchangeDeclare(exchange: "direct_logs", type: ExchangeType.Direct);
-            var queueName = channel.QueueDeclare().QueueName;
+            
+            //var queueName = channel.QueueDeclare().QueueName;
+            var queueName = "testName";
+            channel.QueueDeclare(queue: queueName,
+                                 durable: false,
+                                 exclusive: false,
+                                 autoDelete: false,
+                                 arguments: null);
 
 
             Console.WriteLine("Please enter interested routings(Enter 'End' to finish)");
@@ -40,6 +47,7 @@ namespace Receiver
                                   routingKey: routing); 
             }
 
+            channel.BasicQos(prefetchSize: 0, prefetchCount: 1, global: false);
             Console.WriteLine("Waiting for messages...");
 
             var consumer = new EventingBasicConsumer(channel);
@@ -49,9 +57,10 @@ namespace Receiver
                 var message = Encoding.UTF8.GetString(body);
                 var routingKey = ea.RoutingKey;
                 Console.WriteLine($"Received '{routingKey}':'{message}'");
+                channel.BasicAck(ea.DeliveryTag, false);
             };
             channel.BasicConsume(queue: queueName,
-                                 autoAck: true,
+                                 autoAck: false,
                                  consumer: consumer);
 
             Console.WriteLine("Press any key to exit");
