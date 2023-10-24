@@ -17,6 +17,7 @@ namespace sender
             using var channel = connection.CreateModel();
 
             channel.ExchangeDeclare(exchange: "direct_logs", type: ExchangeType.Direct);
+            channel.ConfirmSelect();
 
             string routing;
             string message;
@@ -34,6 +35,7 @@ namespace sender
                                      routingKey: routing,
                                      basicProperties: null,
                                      body: body);
+                //channel.WaitForConfirms(); // use this when want to send wait untill corrent mesages are published // wont work without channel.ConfirmSelect();
                 Console.WriteLine($"Sent ''{message}' with ;{routing}' routing");
                 Console.WriteLine("----------------------------------------------------------");
             } while (message != "End");
