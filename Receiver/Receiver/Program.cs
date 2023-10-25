@@ -25,7 +25,8 @@ namespace Receiver
             var queueName = string.Empty;
             var qArguments = new Dictionary<string, object>
             {
-                { "x-dead-letter-exchange", "nacked_not_queud_exchange" }
+                { "x-dead-letter-exchange", "nacked_not_queud_exchange" } ,
+                { "x-max-priority", 5 } // while its possible t use both negative and positive numbers up to 255 its highly recommended to use numbers between 0 to 5 
             };
             channel.QueueDeclare(queue: queueName,
                                  durable: false,
