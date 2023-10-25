@@ -18,14 +18,20 @@ namespace Receiver
             using var channel = connection.CreateModel();
 
             channel.ExchangeDeclare(exchange: "direct_logs", type: ExchangeType.Direct);
-            
+
             //var queueName = channel.QueueDeclare().QueueName;
-            var queueName = "testName";
+            var queueName = "testName3";
+            var qArguments = new Dictionary<string, object>
+            {
+                { "x-dead-letter-exchange", "nacked_not_queud_exchange" }
+            };
             channel.QueueDeclare(queue: queueName,
                                  durable: false,
                                  exclusive: false,
-                                 autoDelete: false,
-                                 arguments: null);
+                                 autoDelete: true,
+                                 arguments: qArguments);
+
+
 
 
             Console.WriteLine("Please enter interested routings(Enter 'End' to finish)");
@@ -44,7 +50,7 @@ namespace Receiver
             {
                 channel.QueueBind(queue: queueName,
                                   exchange: "direct_logs",
-                                  routingKey: routing); 
+                                  routingKey: routing);
             }
 
             channel.BasicQos(prefetchSize: 0, prefetchCount: 1, global: false);
