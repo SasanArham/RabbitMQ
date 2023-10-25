@@ -30,7 +30,7 @@ namespace Receiver
             };
             channel.QueueDeclare(queue: queueName,
                                  durable: false,
-                                 exclusive: false,
+                                 exclusive: true,
                                  autoDelete: true,
                                  arguments: qArguments);
 
