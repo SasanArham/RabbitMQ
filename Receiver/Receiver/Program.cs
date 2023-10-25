@@ -1,6 +1,9 @@
-﻿using System.Text;
+﻿using System.Drawing;
+using System;
+using System.Text;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace Receiver
 {
@@ -19,8 +22,7 @@ namespace Receiver
 
             channel.ExchangeDeclare(exchange: "direct_logs", type: ExchangeType.Direct);
 
-            //var queueName = channel.QueueDeclare().QueueName;
-            var queueName = "testName3";
+            var queueName = string.Empty;
             var qArguments = new Dictionary<string, object>
             {
                 { "x-dead-letter-exchange", "nacked_not_queud_exchange" }
@@ -31,29 +33,35 @@ namespace Receiver
                                  autoDelete: true,
                                  arguments: qArguments);
 
+            //Note that not all property combination make sense in practice. For example, auto-delete and exclusive queues should be server-named.
+            //Such queues are supposed to be used for client-specific or connection (session)-specific data.
+            //When auto-delete or exclusive queues use well - known(static) names,
+            //in case of client disconnection and immediate reconnection there will be a natural race condition between RabbitMQ nodes that will delete
+            //such queues and recovering clients that will try to re-declare them.This can result in client - side connection recovery failure or exceptions,
+            //and create unnecessary confusion or affect application availability.
+            //https://www.rabbitmq.com/queues.html
+
 
 
 
             Console.WriteLine("Please enter interested routings(Enter 'End' to finish)");
-            var routings = new HashSet<string>();
-            while (true)
-            {
-                var routing = Console.ReadLine();
-                if (routing == "End")
+                var routings = new HashSet<string>();
+                while (true)
                 {
-                    break;
+                    var routing = Console.ReadLine();
+                    if (routing == "End")
+                    {
+                        break;
+                    }
+                    routings.Add(routing);
                 }
-                routings.Add(routing);
-            }
-
-            foreach (var routing in routings)
-            {
-                channel.QueueBind(queue: queueName,
-                                  exchange: "direct_logs",
-                                  routingKey: routing);
-            }
-
-            channel.BasicQos(prefetchSize: 0, prefetchCount: 1, global: false);
+                foreach (var routing in routings)
+                {
+                    channel.QueueBind(queue: queueName,
+                    exchange: "direct_logs",
+                    routingKey: routing);
+                }
+                channel.BasicQos(prefetchSize: 0, prefetchCount: 1, global: false);
             Console.WriteLine("Waiting for messages...");
 
             var consumer = new EventingBasicConsumer(channel);
