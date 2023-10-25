@@ -34,7 +34,16 @@ namespace sender
                 channel.BasicPublish(exchange: "direct_logs",
                                      routingKey: routing,
                                      basicProperties: null,
-                                     body: body);
+                                     body: body,
+                                     mandatory:true);
+
+
+                channel.BasicReturn += (sender, args) =>
+                {
+                    var message = Encoding.UTF8.GetString(args.Body.ToArray());
+                    Console.WriteLine("Message returned: {0}", message);
+                };
+
                 //channel.WaitForConfirms(); // use this when want to send wait untill corrent mesages are published // wont work without channel.ConfirmSelect();
                 Console.WriteLine($"Sent ''{message}' with ;{routing}' routing");
                 Console.WriteLine("----------------------------------------------------------");
