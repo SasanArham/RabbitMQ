@@ -4,6 +4,7 @@ using System.Text;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using static System.Net.Mime.MediaTypeNames;
+using System.IO;
 
 namespace Receiver
 {
@@ -22,10 +23,20 @@ namespace Receiver
 
             channel.ExchangeDeclare(exchange: "direct_logs", type: ExchangeType.Direct);
 
-            var queueName = "stream_queue";
+            var queueName = "stream_queue2";
+
+
+            //Streams are implemented as an immutable append-only disk log.
+            //This means that the log will grow indefinitely until the disk runs out.
+            //To avoid this undesirable scenario it is possible to set a retention configuration per stream which will discard the oldest data
+            //in the log based on total log data size and/or age.
+            //There are two parameters that control the retention of a stream.
+            //These can be combined. These are either set at declaration time using a queue argument or as a policy which can be dynamically updated.
             var qArguments = new Dictionary<string, object>
             {
-                { "x-queue-type", "stream"}
+                { "x-queue-type", "stream"} ,
+                { "x-max-age", "7D"} , //valid units: Y, M, D, h, m, s
+                { "x-max-length-bytes", 100000000} 
             };
             channel.QueueDeclare(queue: queueName,
                                  durable: true,
