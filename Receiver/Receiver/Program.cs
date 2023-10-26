@@ -46,23 +46,23 @@ namespace Receiver
 
 
             Console.WriteLine("Please enter interested routings(Enter 'End' to finish)");
-                var routings = new HashSet<string>();
-                while (true)
+            var routings = new HashSet<string>();
+            while (true)
+            {
+                var routing = Console.ReadLine();
+                if (routing == "End")
                 {
-                    var routing = Console.ReadLine();
-                    if (routing == "End")
-                    {
-                        break;
-                    }
-                    routings.Add(routing);
+                    break;
                 }
-                foreach (var routing in routings)
-                {
-                    channel.QueueBind(queue: queueName,
-                    exchange: "direct_logs",
-                    routingKey: routing);
-                }
-                channel.BasicQos(prefetchSize: 0, prefetchCount: 1, global: false);
+                routings.Add(routing);
+            }
+            foreach (var routing in routings)
+            {
+                channel.QueueBind(queue: queueName,
+                exchange: "direct_logs",
+                routingKey: routing);
+            }
+            channel.BasicQos(prefetchSize: 0, prefetchCount: 1, global: false);
             Console.WriteLine("Waiting for messages...");
 
             var consumer = new EventingBasicConsumer(channel);
