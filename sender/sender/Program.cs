@@ -29,11 +29,13 @@ namespace sender
 
                 Console.WriteLine("Enter your message (Enter 'End' to close the program):");
                 message = Console.ReadLine() ?? "Hello";
-
                 var body = Encoding.UTF8.GetBytes(message);
+                
+                var properties = channel.CreateBasicProperties();
+                properties.Persistent = true;
                 channel.BasicPublish(exchange: "direct_logs",
                                      routingKey: routing,
-                                     basicProperties: null,
+                                     basicProperties: properties,
                                      body: body,
                                      mandatory:true);
 
