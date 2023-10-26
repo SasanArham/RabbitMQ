@@ -22,28 +22,16 @@ namespace Receiver
 
             channel.ExchangeDeclare(exchange: "direct_logs", type: ExchangeType.Direct);
 
-            var queueName = "receiver_queue";
+            var queueName = "stream_queue";
             var qArguments = new Dictionary<string, object>
             {
-                { "x-dead-letter-exchange", "nacked_not_queud_exchange" } ,
-                { "x-max-priority", 5 } // while its possible t use both negative and positive numbers up to 255 its highly recommended to use numbers between 0 to 5 
+                { "x-queue-type", "stream"}
             };
             channel.QueueDeclare(queue: queueName,
                                  durable: true,
                                  exclusive: false,
                                  autoDelete: false,
                                  arguments: qArguments);
-
-            //Note that not all property combination make sense in practice. For example, auto-delete and exclusive queues should be server-named.
-            //Such queues are supposed to be used for client-specific or connection (session)-specific data.
-            //When auto-delete or exclusive queues use well - known(static) names,
-            //in case of client disconnection and immediate reconnection there will be a natural race condition between RabbitMQ nodes that will delete
-            //such queues and recovering clients that will try to re-declare them.This can result in client - side connection recovery failure or exceptions,
-            //and create unnecessary confusion or affect application availability.
-            //https://www.rabbitmq.com/queues.html
-
-
-
 
             Console.WriteLine("Please enter interested routings(Enter 'End' to finish)");
             var routings = new HashSet<string>();
@@ -62,7 +50,7 @@ namespace Receiver
                 exchange: "direct_logs",
                 routingKey: routing);
             }
-            channel.BasicQos(prefetchSize: 0, prefetchCount: 1, global: false);
+            channel.BasicQos(prefetchSize: 0, prefetchCount: 5, global: false);
             Console.WriteLine("Waiting for messages...");
 
             var consumer = new EventingBasicConsumer(channel);
@@ -72,8 +60,6 @@ namespace Receiver
                 var message = Encoding.UTF8.GetString(body);
                 var routingKey = ea.RoutingKey;
                 
-                //Aded this to simulate long consuming
-                Thread.Sleep(20000);
 
                 if (message == "Nack")
                 {
@@ -87,9 +73,17 @@ namespace Receiver
                     Console.WriteLine($"Received '{routingKey}':'{message}'");
                 }
             };
+
+            var consumerArgs = new Dictionary<string, object>
+            {
+                //{ "x-stream-offset", "first" } // It means whenever the app starts consuming it will start reading from first message of stream
+                //{ "x-stream-offset", 3 } // It means whenever the app starts consuming it will start reading from fourth (index starts from 0) message of stream
+                { "x-stream-offset", "last" } // It means whenever the app starts consuming it will start reading from last message of stream
+            };
             channel.BasicConsume(queue: queueName,
                                  autoAck: false,
-                                 consumer: consumer);
+                                 consumer: consumer
+                                 ,arguments: consumerArgs);
 
             Console.WriteLine("Press any key to exit");
             Console.ReadLine();
