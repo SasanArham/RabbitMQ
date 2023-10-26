@@ -71,15 +71,20 @@ namespace Receiver
                 var body = ea.Body.ToArray();
                 var message = Encoding.UTF8.GetString(body);
                 var routingKey = ea.RoutingKey;
-                Console.WriteLine($"Received '{routingKey}':'{message}'");
+                
+                //Aded this to simulate long consuming
+                Thread.Sleep(20000);
+
                 if (message == "Nack")
                 {
                     channel.BasicNack(ea.DeliveryTag, false
                         , false); // If I set this to true and there is no other handeling consumer it will cause infinte reququing loop
+                    Console.WriteLine($"Received But not acknoledged '{routingKey}':'{message}'");
                 }
                 else
                 {
                     channel.BasicAck(ea.DeliveryTag, false);
+                    Console.WriteLine($"Received '{routingKey}':'{message}'");
                 }
             };
             channel.BasicConsume(queue: queueName,
