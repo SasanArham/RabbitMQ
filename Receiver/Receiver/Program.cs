@@ -22,16 +22,16 @@ namespace Receiver
 
             channel.ExchangeDeclare(exchange: "direct_logs", type: ExchangeType.Direct);
 
-            var queueName = string.Empty;
+            var queueName = "receiver_queue";
             var qArguments = new Dictionary<string, object>
             {
                 { "x-dead-letter-exchange", "nacked_not_queud_exchange" } ,
                 { "x-max-priority", 5 } // while its possible t use both negative and positive numbers up to 255 its highly recommended to use numbers between 0 to 5 
             };
             channel.QueueDeclare(queue: queueName,
-                                 durable: false,
-                                 exclusive: true,
-                                 autoDelete: true,
+                                 durable: true,
+                                 exclusive: false,
+                                 autoDelete: false,
                                  arguments: qArguments);
 
             //Note that not all property combination make sense in practice. For example, auto-delete and exclusive queues should be server-named.
